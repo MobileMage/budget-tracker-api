@@ -1,7 +1,6 @@
 FROM node:20-alpine AS base
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --only=production
 
 FROM base AS development
 RUN npm ci
@@ -11,7 +10,9 @@ EXPOSE 3000
 CMD ["npm", "run", "dev"]
 
 FROM base AS production
-COPY . .
+RUN npm ci --omit=dev
+COPY prisma ./prisma
 RUN npx prisma generate
-EXPOSE 3000
-CMD ["npm", "start"]
+COPY . .
+EXPOSE 8000
+CMD ["node", "src/server.js"]
