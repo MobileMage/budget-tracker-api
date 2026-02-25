@@ -1,5 +1,5 @@
 const app = require('./app');
-const { env } = require('./config/env');
+const env = require('./config/env');
 const logger = require('./utils/logger');
 const { startWeeklyDigest } = require('./modules/notifications/jobs/weeklyDigest.cron');
 
