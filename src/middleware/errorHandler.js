@@ -2,7 +2,8 @@ const { Prisma } = require('@prisma/client');
 const { ZodError } = require('zod');
 const { JsonWebTokenError, TokenExpiredError } = require('jsonwebtoken');
 const winston = require('winston');
-const env = require('../config/env');
+
+const nodeEnv = process.env.NODE_ENV || 'development';
 
 /**
  * Application-wide Winston logger instance.
@@ -11,11 +12,11 @@ const env = require('../config/env');
  * @type {winston.Logger}
  */
 const logger = winston.createLogger({
-  level: env.NODE_ENV === 'production' ? 'error' : 'debug',
+  level: nodeEnv === 'production' ? 'error' : 'debug',
   format: winston.format.combine(
     winston.format.timestamp(),
     winston.format.errors({ stack: true }),
-    env.NODE_ENV === 'production'
+    nodeEnv === 'production'
       ? winston.format.json()
       : winston.format.combine(winston.format.colorize(), winston.format.simple())
   ),
@@ -116,7 +117,7 @@ function errorHandler(err, req, res, _next) {
   }
 
   // In development include the stack trace for unhandled 500s
-  if (statusCode === 500 && env.NODE_ENV === 'development') {
+  if (statusCode === 500 && nodeEnv === 'development') {
     body.stack = err.stack;
   }
 
