@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.env
+*.log
+logs/
+coverage/
+.nyc_output/
+.DS_Store
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.sublime-*
+prisma/migrations/

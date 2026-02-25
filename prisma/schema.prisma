@@ -1,0 +1,191 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AllowanceCycle {
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+}
+
+enum BudgetPeriod {
+  WEEKLY
+  MONTHLY
+}
+
+enum AlertType {
+  OVERSPENDING
+  SPIKE
+  IMPULSE
+  LATE_NIGHT
+  POST_INCOME
+  LOW_BALANCE
+}
+
+enum RiskLevel {
+  SAFE
+  WARNING
+  DANGER
+}
+
+enum ExpenseCategory {
+  FOOD
+  TRANSPORT
+  ENTERTAINMENT
+  SHOPPING
+  EDUCATION
+  HEALTH
+  UTILITIES
+  RENT
+  PERSONAL
+  OTHER
+}
+
+model User {
+  id             String          @id @default(uuid())
+  name           String
+  email          String          @unique
+  passwordHash   String
+  allowanceCycle AllowanceCycle  @default(MONTHLY)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  incomes         Income[]
+  expenses        Expense[]
+  budgets         Budget[]
+  alerts          Alert[]
+  recommendations Recommendation[]
+  forecasts       ForecastSnapshot[]
+  notifications   Notification[]
+  refreshTokens   RefreshToken[]
+
+  @@index([email])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+}
+
+model Income {
+  id     String   @id @default(uuid())
+  userId String
+  amount Float
+  source String
+  date   DateTime
+  notes  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, date])
+}
+
+model Expense {
+  id        String          @id @default(uuid())
+  userId    String
+  amount    Float
+  category  ExpenseCategory
+  date      DateTime
+  notes     String?
+  isImpulse Boolean         @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, date])
+  @@index([userId, category])
+}
+
+model Budget {
+  id        String          @id @default(uuid())
+  userId    String
+  category  ExpenseCategory
+  limit     Float
+  period    BudgetPeriod
+  startDate DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, category, period])
+  @@index([userId])
+}
+
+model Alert {
+  id          String    @id @default(uuid())
+  userId      String
+  type        AlertType
+  message     String
+  isRead      Boolean   @default(false)
+  triggeredAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, isRead])
+}
+
+model Recommendation {
+  id          String          @id @default(uuid())
+  userId      String
+  tip         String
+  category    ExpenseCategory?
+  generatedAt DateTime        @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model ForecastSnapshot {
+  id                String    @id @default(uuid())
+  userId            String
+  balance           Float
+  burnRate          Float
+  estimatedDaysLeft Int
+  riskLevel         RiskLevel
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, createdAt])
+}
+
+model Notification {
+  id     String  @id @default(uuid())
+  userId String
+  title  String
+  body   String
+  isRead Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, isRead])
+}
